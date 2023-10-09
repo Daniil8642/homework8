@@ -1,43 +1,23 @@
 from datetime import datetime, timedelta, date
+from typing import List, Dict
+from collections import defaultdict
 
-def get_birthdays_per_week(users):
-    birthdays_by_day = {
-        "Monday": [],
-        "Tuesday": [],
-        "Wednesday": [],
-        "Thursday": [],
-        "Friday": [],
-        "Saturday": [],
-        "Sunday": [],
-    }
 
-    today = date.today()
-    future_birthdays_exist = False  
-    if not future_birthdays_exist:
-        return {}
+def get_birthdays_per_week(users: List[Dict[str, date]]) -> Dict[str, List]:
+    current_day = date.today()
+    day_next_week = current_day + timedelta(days=6)
+
+    result_dict = defaultdict(list)
 
     for user in users:
-        birthday = user.get("birthday")
+        name, birthday = user["name"], user["birthday"]
+        birthday = birthday.replace(year=current_day.year)
+        if birthday.month == 1:
+            birthday = birthday.replace(year=current_day.year + 1)
+        if current_day <= birthday <= day_next_week:
+            if birthday.weekday() == 5 or birthday.weekday() == 6:
+                result_dict["Monday"].append(name)
+            else:
+                result_dict[birthday.strftime("%A")].append(name)
 
-        if birthday < today:
-            birthday = birthday.replace(year=today.year + 1)
-            future_birthdays_exist = True
-
-        day_of_week = birthday.strftime("%A")
-
-        birthdays_by_day[day_of_week].append(user.get("name"))
-
-    
-    if birthdays_by_day["Saturday"]:
-        birthdays_by_day["Monday"].extend(birthdays_by_day["Saturday"])
-        birthdays_by_day["Saturday"] = []
-
-    if birthdays_by_day["Sunday"]:
-        birthdays_by_day["Monday"].extend(birthdays_by_day["Sunday"])
-        birthdays_by_day["Sunday"] = []
-
-
-    return birthdays_by_day
-
-
-
+    return result_dict
